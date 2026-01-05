@@ -172,7 +172,20 @@ class Evaluator {
     }
 
     if (obj is List) {
-      return obj.map((item) => _getProperty(item, name)).where((e) => e != null).toList();
+      final results = <dynamic>[];
+      for (final item in obj) {
+        if (item is Map && item.containsKey(name)) {
+          // Include the value even if it's null, as long as the key exists
+          results.add(item[name]);
+        } else if (item is List) {
+          // Recursively handle nested lists
+          final nested = _getProperty(item, name);
+          if (nested is List && nested.isNotEmpty) {
+            results.addAll(nested);
+          }
+        }
+      }
+      return results;
     }
 
     return null;
