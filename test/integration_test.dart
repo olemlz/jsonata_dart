@@ -369,5 +369,50 @@ void main() {
         expect(result, {'name': 'John', 'age': 30});
       });
     });
+
+    group('Array Comparison Semantics', () {
+      test('array to scalar equality - value exists', () {
+        expect(Jsonata('[1, 2, 3] = 2').evaluate(null), true);
+      });
+
+      test('array to scalar equality - value does not exist', () {
+        expect(Jsonata('[1, 2, 3] = 5').evaluate(null), false);
+      });
+
+      test('array to scalar inequality', () {
+        expect(Jsonata('[1, 2, 3] != 5').evaluate(null), true);
+        expect(Jsonata('[1, 2, 3] != 2').evaluate(null), false);
+      });
+
+      test('array to array comparison - has common elements', () {
+        expect(Jsonata('[1, 2, 3] = [2, 3, 4]').evaluate(null), true);
+      });
+
+      test('array to array comparison - no common elements', () {
+        expect(Jsonata('[1, 2] = [3, 4]').evaluate(null), false);
+      });
+
+      test('predicate with field comparison returning array', () {
+        final data = {
+          'fields': [
+            {'some_field_name': 'BLA_BLA', 'value': 'some_value'},
+            {'some_field_name': 'OTHER', 'value': 'other_value'},
+            {'some_field_name': 'BLA_BLA', 'value': 'another_value'},
+          ]
+        };
+
+        // Should return true because one of the filtered items has value = 'some_value'
+        final expr1 = Jsonata("fields[some_field_name = 'BLA_BLA'].value = 'some_value'");
+        expect(expr1.evaluate(data), true);
+
+        // Should return false - no match
+        final expr2 = Jsonata("fields[some_field_name = 'BLA_BLA'].value = 'nonexistent'");
+        expect(expr2.evaluate(data), false);
+
+        // Should return true - matches 'another_value'
+        final expr3 = Jsonata("fields[some_field_name = 'BLA_BLA'].value = 'another_value'");
+        expect(expr3.evaluate(data), true);
+      });
+    });
   });
 }

@@ -298,9 +298,9 @@ class Evaluator {
       case '&':
         return '${left ?? ''}${right ?? ''}';
       case '=':
-        return left == right;
+        return _compareEqual(left, right);
       case '!=':
-        return left != right;
+        return !_compareEqual(left, right);
       case '<':
         return (left as num) < (right as num);
       case '<=':
@@ -349,5 +349,40 @@ class Evaluator {
     if (value is List) return value.isNotEmpty;
     if (value is Map) return value.isNotEmpty;
     return true;
+  }
+
+  bool _compareEqual(dynamic left, dynamic right) {
+    // If either is null, use simple equality
+    if (left == null || right == null) {
+      return left == right;
+    }
+
+    // If left is an array and right is not
+    if (left is List && right is! List) {
+      // Check if any element in left equals right
+      return left.any((item) => _compareEqual(item, right));
+    }
+
+    // If right is an array and left is not
+    if (right is List && left is! List) {
+      // Check if any element in right equals left
+      return right.any((item) => _compareEqual(left, item));
+    }
+
+    // If both are arrays
+    if (left is List && right is List) {
+      // Check if any element from left equals any element from right
+      for (final leftItem in left) {
+        for (final rightItem in right) {
+          if (_compareEqual(leftItem, rightItem)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    // For non-array values, use standard equality
+    return left == right;
   }
 }
